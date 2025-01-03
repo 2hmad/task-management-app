@@ -1,0 +1,61 @@
+services:
+  rethinkdb:
+    restart: unless-stopped
+    container_name: rethinkdb
+    image: rethinkdb:latest
+    ports:
+      - "8080:8080"
+      - "28015:28015"
+      - "29015:29015"
+    volumes:
+      - ./data:/data
+    command: rethinkdb --bind all --http-port 8080
+    healthcheck:
+      test: ["CMD", "rethinkdb", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    restart: unless-stopped
+    container_name: api
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_KEY=base64:xRwtjABrXzT0dz5c1SJRtKeINt/ThhB2vx2bvPhgL64=
+      - DB_CONNECTION=rethinkdb
+      - DB_HOST=rethinkdb
+      - DB_PORT=28015
+      - DB_DATABASE=laravel
+      - DB_USERNAME=admin
+      - DB_PASSWORD=secret
+    ports:
+      - "9000:9000"
+    depends_on:
+      rethinkdb:
+        condition: service_healthy
+    volumes:
+      - ./backend:/var/www
+
+  web:
+    restart: unless-stopped
+    container_name: web
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    volumes:
+      - ./frontend:/var/www
+
+volumes:
+  data:
+
+networks:
+  default:
+    driver: bridge
