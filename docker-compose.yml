@@ -4,21 +4,42 @@ services:
     container_name: rethinkdb
     image: rethinkdb:latest
     ports:
-      - "8080:8080"
+      - "8089:8080"
       - "28015:28015"
       - "29015:29015"
-    volumes:
-      - ./data:/data
     command: rethinkdb --bind all --http-port 8080
     healthcheck:
-      test: ["CMD", "rethinkdb", "ping"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
+    volumes:
+      - ./rethinkdb:/data
+    networks:
+      - default
+
+  webserver:
+    image: nginx:alpine
+    container_name: nginx_webserver
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    volumes:
+      - ./backend:/var/www/html
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    networks:
+      - default
 
   api:
     restart: unless-stopped
     container_name: api
+    working_dir: /var/www/html
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -38,7 +59,9 @@ services:
       rethinkdb:
         condition: service_healthy
     volumes:
-      - ./backend:/var/www
+      - ./backend:/var/www/html
+    networks:
+      - default
 
   web:
     restart: unless-stopped
@@ -51,10 +74,9 @@ services:
     depends_on:
       - api
     volumes:
-      - ./frontend:/var/www
-
-volumes:
-  data:
+      - ./frontend:/app
+    networks:
+      - default
 
 networks:
   default:
