@@ -1,8 +1,8 @@
 # Use the official Node.js image as the base image
-FROM node:16-alpine
+FROM node:lts-alpine
 
 # Set the working directory
-WORKDIR /var/www
+WORKDIR /app
 
 # Copy package.json and package-lock.json
 COPY package.json package-lock.json ./
