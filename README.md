@@ -7,7 +7,7 @@ This repository contains a simple Task Management Application with a **Laravel**
 ### Backend (Laravel)
 
 - **API Endpoint**:
-  - `GET /tasks`: Fetches a list of tasks (hardcoded or from a RethinkDB database).
+  - `GET /tasks`: Fetches a list of tasks from a RethinkDB database.
 - **Database Integration**:
   - Tasks can be stored and fetched from a RethinkDB database.
 - **Custom Commands**:
@@ -45,7 +45,7 @@ This repository contains a simple Task Management Application with a **Laravel**
 
 ## Backend (Laravel) Setup
 
-The Laravel API runs in the api container. Environment variables for RethinkDB connection are defined in .env:
+The Laravel API runs in the api container. Environment variables for RethinkDB connection are defined in env:
 
 - DB_HOST=rethinkdb
 - DB_PORT=28015
@@ -66,7 +66,7 @@ The frontend is configured to fetch data from the Laravel API. The base URL is d
 NEXT_PUBLIC_API_URL=http://webserver:80
 ```
 
-Access the frontend at http://localhost:3000.
+Access the frontend at http://localhost:3000
 
 ## Project Structure
 
