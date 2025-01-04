@@ -99,13 +99,20 @@ class RethinkDBSeeder extends Command
 
         $faker = Faker::create();
 
+        $tasks = [];
+
+        // Generate 5 tasks
+        for ($i = 0; $i < 5; $i++) {
+            $tasks[] = [
+                'id' => uuid(),
+                'title' => $faker->sentence(),
+                'description' => $faker->paragraph(),
+                'status' => 'pending',
+            ];
+        }
+
         // Insert data into the table
-        r\db(env('DB_DATABASE'))->table($tableName)->insert([
-            'id' => uuid(),
-            'title' => $faker->sentence(),
-            'description' => $faker->paragraph(),
-            'status' => 'pending',
-        ])->run($this->connection);
+        r\db(env('DB_DATABASE'))->table($tableName)->insert($tasks)->run($this->connection);
 
         $this->info('Table seeded successfully.');
 
