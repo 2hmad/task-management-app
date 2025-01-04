@@ -31,6 +31,22 @@ return [
 
     'connections' => [
 
+        'rethinkdb' => [
+            'name' => 'rethinkdb',
+            'driver' => 'rethinkdb',
+            'host' => env('DB_HOST', 'localhost'),
+            'port' => env('DB_PORT', 28015),
+            'database' => env('DB_DATABASE', 'test'),
+            'username' => env('DB_USERNAME', 'admin'),
+            'password' => env('DB_PASSWORD', ''),
+            'timeout' => 5,
+            'timeout_read' => 10,
+            'timeout_connect' => 0.1,
+            'retries' => 3,
+            'ssl' => false,
+            'options' => [],
+        ],
+
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DB_URL'),
