@@ -10,7 +10,11 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     zip \
     unzip \
-    libzip-dev
+    libzip-dev \
+    libfcgi-bin
+
+# Enable php fpm status page
+RUN set -xe && echo "pm.status_path = /status" >> /usr/local/etc/php-fpm.d/zz-docker.conf
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -29,20 +33,32 @@ RUN mkdir -p /home/dev/.composer && \
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy existing application directory
+COPY composer.json composer.lock ./
+RUN composer install --no-scripts --no-autoloader
+
+# Copy the rest of the application files
 COPY . .
 
-# Set correct permissions
+# Run Composer again to install the rest of the dependencies
+RUN composer dump-autoload --optimize
+
+# Change ownership of the application files
 RUN chown -R dev:www-data /var/www/html && \
     find /var/www/html -type f -exec chmod 664 {} \; && \
     find /var/www/html -type d -exec chmod 775 {} \; && \
     chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache && \
     chown -R dev:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-USER dev
+# Ensure the log file exists and has the correct permissions
+RUN touch /var/www/html/storage/logs/laravel.log && \
+chown www-data:www-data /var/www/html/storage/logs/laravel.log && \
+chmod 775 /var/www/html/storage/logs/laravel.log
 
-# Install dependencies
-RUN composer install
+# Download and install php-fpm-healthcheck
+RUN curl -o /usr/local/bin/php-fpm-healthcheck https://raw.githubusercontent.com/renatomefi/php-fpm-healthcheck/master/php-fpm-healthcheck && \
+    chmod +x /usr/local/bin/php-fpm-healthcheck
 
 EXPOSE 9000
-CMD ["php-fpm"]
+
+# Start PHP-FPM and run Laravel migrations and seeders
+CMD ["sh", "-c", "php artisan rethinkdb:migrate && php artisan rethinkdb:seed && php-fpm"]
